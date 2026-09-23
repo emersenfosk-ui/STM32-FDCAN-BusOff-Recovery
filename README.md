@@ -129,10 +129,3 @@ FDCAN 在 Error Passive 状态下 TEC 会被硬件冻结，无法达到 BusOff�
 - `bsp_can.c`：FDCAN 过滤器、接收中断、发送函数
 - `H7_FDCAN_Compatibility/`：包含 F4（经典 CAN 节点）和 H7（FD 节点）两侧的兼容性测试工程
 
-## 踩坑记录
-1. **FDCAN 时钟源被 CubeMX 覆盖**：必须在 `SystemClock_Config()` 末尾手动强制切换到 PLL1Q。
-2. **FDCAN 在 Error Passive 下 TEC 冻结**：自愈逻辑不能等待 BusOff 回调，必须在检测到 EP=1 时主动复位 CAN 控制器。
-3. **CANable 波特率每次打开会重置**：每次插拔后需重新确认 Cangaroo 的数据段波特率和采样点。
-4. **CAN FD 数据段波特率必须严格匹配**：MCU 配置 2Mbps，Cangaroo 选 2000000 与 80% 采样点。
-5. **逻辑分析仪帧尾报错（红色 x）**：在 2Mbps 高速数据段下，普通逻辑分析仪采样点边界判定有误差，不影响实际通信，只要 Cangaroo 能收到帧即可。
-6. **F4 的 BOOT0 必须接 GND**：否则芯片无法从 Flash 启动，表现为串口只打印乱码或没有任何现象。
