@@ -69,3 +69,17 @@ FDCAN 在 Error Passive 状态下 TEC 会被硬件冻结，无法达到 BusOff�
 3. CANable 波特率每次打开会重置：每次插拔后需重新确认 Cangaroo 的数据段波特率和采样点。
 4. CAN FD 数据段波特率必须严格匹配：MCU 配置 2Mbps（`DataPrescaler=3, DataTimeSeg1=7, DataTimeSeg2=2`），Cangaroo 选 2000000 与 80% 采样点。
 5. 逻辑分析仪帧尾报错（红色 x）：在 2Mbps 高速数据段下，普通逻辑分析仪采样点边界判定有误差，但不影响实际通信，只要 Cangaroo 能收到帧即可。
+
+
+### 实验二：CAN FD → 经典 CAN（不兼容）
+
+- **配置**：H7 发 FD 帧（ID=0x333，64字节，BRS关），F4 经典节点接收。
+- **现象**：
+  - F4 硬件无法解析 FDF=1 的帧，在总线中途主动插入错误帧（逻辑分析仪抓到 0x333 后的 Error）。
+  - F4 接收错误计数器（REC）迅速飙升至 255，进入 Error Passive（EP=1）。
+  - F4 的持续报错干扰了总线，导致 H7 发送 FIFO 塞满，串口从 `H7 Send FD OK` 退化为 `H7 Send FD FAILED`。
+- **结论**：经典 CAN 节点无法解析 FD 帧，且会主动用错误帧破坏总线，导致 FD 节点通信阻塞。混合组网必须通过网关做协议转换。
+
+![H7发送阻塞](docs/compatibility/h7_fd_send_blocked.png)
+![F4进入被动错误](docs/compatibility/f4_rec_error_passive.png)
+![逻辑分析仪错误帧](docs/compatibility/logic_fd_collision_error.png)
